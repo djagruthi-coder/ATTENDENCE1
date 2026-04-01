@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Attendance Pro</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <div class="nav-brand">Attendance Pro | Teacher</div>
+        <div class="nav-user">
+            <span id="userName">Teacher Name</span>
+            <button onclick="logout()" class="btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2 class="section-title">Mark Attendance</h2>
+            <div class="log-filters">
+                <select id="branchSelect"><option value="">Select Branch</option></select>
+                <select id="sectionSelect"><option value="">Select Section</option></select>
+                <input type="text" id="subjectInput" placeholder="Enter Subject">
+                <input type="date" id="dateInput">
+                <button onclick="loadStudents()" class="btn" style="width: auto;">View List</button>
+            </div>
+            
+            <div id="attendanceTableContainer" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Name</th>
+                            <th>Present</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+                <button onclick="submitAttendance()" class="btn" style="margin-top: 1rem;">Submit Attendance</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div class="card">
+                <h2 class="section-title">Add New Student</h2>
+                <form id="addStudentForm">
+                    <div class="form-group"><input type="text" id="newRoll" placeholder="Roll No" required></div>
+                    <div class="form-group"><input type="text" id="newName" placeholder="Full Name" required></div>
+                    <div class="form-group"><input type="date" id="newDob" required></div>
+                    <div class="form-group"><input type="email" id="newEmail" placeholder="Email" required></div>
+                    <div class="form-group"><select id="newBranch"></select></div>
+                    <div class="form-group"><select id="newSection"></select></div>
+                    <button type="submit" class="btn">Add Student</button>
+                </form>
+            </div>
+            <div class="card">
+                <h2 class="section-title">Add New Class</h2>
+                <form id="addClassForm">
+                    <div class="form-group"><input type="text" id="classBranch" placeholder="Branch (e.g. CSE)" required></div>
+                    <div class="form-group"><input type="text" id="classSection" placeholder="Section (e.g. A)" required></div>
+                    <button type="submit" class="btn">Add Class</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if(!user || user.role !== 'teacher') window.location.href = '/';
+        document.getElementById('userName').textContent = user.name;
+        
+        async function loadClasses() {
+            const res = await fetch('/api/get_classes');
+            const classes = await res.json();
+            const bSel = document.getElementById('branchSelect');
+            const sSel = document.getElementById('sectionSelect');
+            const nbSel = document.getElementById('newBranch');
+            const nsSel = document.getElementById('newSection');
+            
+            const branches = [...new Set(classes.map(c => c.branch))];
+            const sections = [...new Set(classes.map(c => c.section))];
+            
+            branches.forEach(b => {
+                bSel.innerHTML += `<option value="${b}">${b}</option>`;
+                nbSel.innerHTML += `<option value="${b}">${b}</option>`;
+            });
+            sections.forEach(s => {
+                sSel.innerHTML += `<option value="${s}">${s}</option>`;
+                nsSel.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+        
+        loadClasses();
+        
+        async function loadStudents() {
+            const branch = document.getElementById('branchSelect').value;
+            const section = document.getElementById('sectionSelect').value;
+            if(!branch || !section) return alert('Select Branch and Section');
+            
+            const res = await fetch('/api/students', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({branch, section})
+            });
+            const students = await res.json();
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.roll_no}</td>
+                        <td>${s.name}</td>
+                        <td><input type="checkbox" class="attendance-check" data-roll="${s.roll_no}"></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('attendanceTableContainer').style.display = 'block';
+        }
+        
+        async function submitAttendance() {
+            const subject = document.getElementById('subjectInput').value;
+            const date = document.getElementById('dateInput').value;
+            if(!subject) return alert('Enter Subject');
+            
+            const attendance = [];
+            document.querySelectorAll('.attendance-check').forEach(chk => {
+                attendance.push({roll_no: chk.dataset.roll, present: chk.checked});
+            });
+            
+            const res = await fetch('/api/bulk_attendance_subject', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({subject, date, attendance})
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert('Attendance submitted successfully');
+                document.getElementById('attendanceTableContainer').style.display = 'none';
+            } else {
+                alert('Error: ' + data.message);
+            }
+        }
+
+        document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const roll_no = document.getElementById('newRoll').value;
+            const name = document.getElementById('newName').value;
+            const dob = document.getElementById('newDob').value;
+            const email = document.getElementById('newEmail').value;
+            const branch = document.getElementById('newBranch').value;
+            const section = document.getElementById('newSection').value;
+            
+            const res = await fetch('/api/add_student', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({roll_no, name, dob, branch, section, email})
+            });
+            if((await res.json()).success) alert('Student added');
+        });
+
+        document.getElementById('addClassForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const branch = document.getElementById('classBranch').value;
+            const section = document.getElementById('classSection').value;
+            const res = await fetch('/api/add_class', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({branch, section})
+            });
+            if((await res.json()).success) { alert('Class added'); loadClasses(); }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Attendance Pro</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <div class="nav-brand">Attendance Pro | Student</div>
+        <div class="nav-user">
+            <span id="userName">Student Name</span>
+            <button onclick="logout()" class="btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <span class="stat-label">Overall Attendance</span>
+                <span class="stat-value" id="overallPerc">0.00%</span>
+            </div>
+            <div class="card stat-card">
+                <span class="stat-label">Status</span>
+                <div id="statusBadge" class="status-badge">N/A</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2 class="section-title">Subject-wise Attendance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Attended</th>
+                        <th>Total Classes</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody id="subjectTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="charts-container">
+            <div class="card">
+                <h2 class="section-title">Overall Ratio</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="card">
+                <h2 class="section-title">Subject Performance</h2>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h2 class="section-title">Attendance Log</h2>
+            <div class="log-filters">
+                <input type="month" id="monthFilter" onchange="filterLog()">
+            </div>
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Chat Assistant -->
+    <div class="chat-widget">
+        <div class="chat-box" id="chatBox">
+            <div class="chat-header">Attendance Assistant</div>
+            <div class="chat-messages" id="chatMsgs">
+                <div class="msg msg-bot">Hi! I can help you check your attendance. Type "attendance" or "status".</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatIn" placeholder="Type a message...">
+                <button onclick="sendChat()" class="btn" style="width: auto;">Send</button>
+            </div>
+        </div>
+        <div class="chat-btn" onclick="toggleChat()">💬</div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if(!user || user.role !== 'student') window.location.href = '/';
+        document.getElementById('userName').textContent = user.name;
+
+        let allLogs = [];
+
+        async function loadAttendance() {
+            const res = await fetch('/api/get_attendance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({roll_no: user.roll_no})
+            });
+            const data = await res.json();
+            
+            const tbody = document.getElementById('subjectTableBody');
+            tbody.innerHTML = '';
+            let totalAtt = 0, totalClasses = 0;
+            const subjects = [], percs = [];
+
+            data.forEach(a => {
+                const perc = (a.attended / a.total) * 100;
+                totalAtt += a.attended;
+                totalClasses += a.total;
+                subjects.push(a.subject);
+                percs.push(perc.toFixed(1));
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${a.subject}</td>
+                        <td>${a.attended}</td>
+                        <td>${a.total}</td>
+                        <td>${perc.toFixed(2)}%</td>
+                    </tr>
+                `;
+            });
+
+            const overall = totalClasses > 0 ? (totalAtt / totalClasses * 100) : 0;
+            document.getElementById('overallPerc').textContent = `${overall.toFixed(2)}%`;
+            
+            const badge = document.getElementById('statusBadge');
+            if(overall >= 85) { 
+                badge.textContent = 'Safe'; badge.className = 'status-badge status-safe';
+            } else if(overall >= 75) {
+                badge.textContent = 'Warning'; badge.className = 'status-badge status-warning';
+            } else {
+                badge.textContent = 'Critical'; badge.className = 'status-badge status-critical';
+            }
+
+            initCharts(totalAtt, totalClasses - totalAtt, subjects, percs);
+        }
+
+        async function loadLogs() {
+            const res = await fetch('/api/get_attendance_log', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({roll_no: user.roll_no})
+            });
+            allLogs = await res.json();
+            filterLog();
+        }
+
+        function filterLog() {
+            const filter = document.getElementById('monthFilter').value;
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+            
+            allLogs.forEach(l => {
+                if(!filter || l.date.startsWith(filter)) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${l.date}</td>
+                            <td>${l.subject}</td>
+                            <td><span class="status-badge ${l.present ? 'status-safe' : 'status-critical'}">${l.present ? 'Present' : 'Absent'}</span></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function initCharts(present, absent, subjects, percs) {
+            new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent'],
+                    datasets: [{
+                        data: [present, absent],
+                        backgroundColor: ['#10b981', '#ef4444']
+                    }]
+                }
+            });
+
+            new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: percs,
+                        backgroundColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        loadAttendance();
+        loadLogs();
+
+        // Chat logic
+        function toggleChat() {
+            const box = document.getElementById('chatBox');
+            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatIn');
+            const msg = input.value.toLowerCase();
+            if(!msg) return;
+
+            addMsg(input.value, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                if(msg.includes('attendance')) {
+                    addMsg(`Your overall attendance is ${document.getElementById('overallPerc').textContent}.`, 'bot');
+                } else if(msg.includes('status')) {
+                    addMsg(`Your status is currently: ${document.getElementById('statusBadge').textContent}.`, 'bot');
+                } else {
+                    addMsg("I can only answer about 'attendance' and 'status'.", 'bot');
+                }
+            }, 500);
+        }
+
+        function addMsg(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg msg-${type}`;
+            div.textContent = text;
+            document.getElementById('chatMsgs').appendChild(div);
+            div.scrollIntoView();
+        }
+    </script>
+</body>
+</html>
