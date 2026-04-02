@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+    margin: 0;
+    height: 100vh;
+    background-image: url(https://thumbs.dreamstime.com/b/hall-building-college-sunrise-63035568.jpg);
+    background-size: cover;        /* 🔥 makes it fill the screen */
+    background-position: center;   /* centers the image */
+    background-repeat: no-repeat;  /* prevents tiling */
+}
+        .header {
+            text-align: center;
+            color: rgb(20, 5, 50);
+            margin: 30px 0 20px;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        
+        /* ✅ Unified container for all login boxes */
+        .login-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1200px;  /* Accommodates 3 boxes: 350px × 3 + gaps */
+            width: 100%;
+            padding: 10px;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 320px;  /* Slightly narrower for better 3-column fit */
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;  /* Prevent boxes from shrinking */
+        }
+        .login-box:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        
+        /* Color accents for each role */
+        .login-box.admin { border-top: 5px solid #e74c3c; }
+        .login-box.teacher { border-top: 5px solid #3498db; }
+        .login-box.student { border-top: 5px solid #2ecc71; }
+        
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.4rem;
+        }
+        .login-box.admin h2 { color: #e74c3c; }
+        .login-box.teacher h2 { color: #3498db; }
+        .login-box.student h2 { color: #2ecc71; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        .form-group input {
+            width: 100%;  /* ✅ Fixed: was 50%, now full width */
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 5px;
+        }
+        .login-btn:active { transform: scale(0.98); }
+        
+        .login-box.admin .login-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        .login-box.admin .login-btn:hover { background: #c0392b; }
+        
+        .login-box.teacher .login-btn {
+            background: #3498db;
+            color: white;
+        }
+        .login-box.teacher .login-btn:hover { background: #2980b9; }
+        
+        .login-box.student .login-btn {
+            background: #2ecc71;
+            color: white;
+        }
+        .login-box.student .login-btn:hover { background: #27ae60; }
+        
+        .error-msg {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            min-height: 20px;
+            font-weight: 500;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            color: white;
+            text-align: center;
+            opacity: 0.85;
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+        
+        /* ✅ Responsive breakpoints */
+        @media (max-width: 1100px) {
+            .login-container {
+                gap: 15px;
+            }
+            .login-box {
+                width: 300px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .login-container {
+                flex-direction: row;
+                justify-content: center;
+            }
+            .login-box {
+                width: 280px;
+                padding: 25px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;  /* Stack vertically on tablets/mobile */
+                align-items: center;
+            }
+            .login-box {
+                width: 100%;
+                max-width: 400px;
+            }
+            .header h1 { font-size: 2rem; }
+        }
+        
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 1.8rem; }
+            .header p { font-size: 1rem; }
+            .login-box {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 0.95rem;
+            }
+            .login-btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 Smart Attendance System</h1>
+        <p>Secure & Efficient Attendance Management</p>
+    </div>
+    
+    <!-- ✅ Single container holding ALL three login boxes -->
+    <div class="login-container">
+        
+        <!-- ADMIN LOGIN BOX -->
+        <div class="login-box admin">
+            <h2>🔐 Admin Login</h2>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminLoginId">Login ID</label>
+                    <input type="text" id="adminLoginId" name="login_id" placeholder="Enter admin ID" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" name="password" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn">Login as Admin</button>
+            </form>
+            <div class="error-msg" id="adminError"></div>
+        </div>
+        
+        <!-- TEACHER LOGIN BOX -->
+        <div class="login-box teacher">
+            <h2>👨‍🏫 Teacher Login</h2>
+            <form id="teacherLoginForm">
+                <div class="form-group">
+                    <label for="teacherLoginId">Login ID</label>
+                    <input type="text" id="teacherLoginId" name="login_id" placeholder="Enter teacher ID" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="teacherPassword">Password</label>
+                    <input type="password" id="teacherPassword" name="password" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn">Login as Teacher</button>
+            </form>
+            <div class="error-msg" id="teacherError"></div>
+        </div>
+        
+        <!-- STUDENT LOGIN BOX -->
+        <div class="login-box student">
+            <h2>👨‍🎓 Student Login</h2>
+            <form id="studentLoginForm">
+                <div class="form-group">
+                    <label for="studentLoginId">Roll Number</label>
+                    <input type="text" id="studentLoginId" name="login_id" placeholder="Enter roll number" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="studentPassword">Password</label>
+                    <input type="password" id="studentPassword" name="password" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-btn">Login as Student</button>
+            </form>
+            <div class="error-msg" id="studentError"></div>
+        </div>
+        
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2026 Smart Attendance System. All rights reserved.</p>
+    </div>
+
+    <script>
+        // ✅ Unified login handler factory to reduce code duplication
+        function setupLogin(formId, errorId, role, redirectUrl) {
+            document.getElementById(formId).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errorDiv = document.getElementById(errorId);
+                errorDiv.textContent = '';
+                
+                const login_id = document.getElementById(`${role}LoginId`).value.trim();
+                const password = document.getElementById(`${role}Password`).value;
+                
+                // Basic validation
+                if (!login_id || !password) {
+                    errorDiv.textContent = 'Please fill in all fields';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ login_id, password, role })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Small delay for smooth transition
+                        setTimeout(() => {
+                            window.location.href = redirectUrl;
+                        }, 300);
+                    } else {
+                        errorDiv.textContent = data.message || 'Login failed. Please check credentials.';
+                        // Shake animation for error feedback
+                        const form = document.getElementById(formId).closest('.login-box');
+                        form.style.animation = 'shake 0.5s';
+                        setTimeout(() => form.style.animation = '', 500);
+                    }
+                } catch (err) {
+                    errorDiv.textContent = 'Connection error. Please try again.';
+                    console.error('Login error:', err);
+                }
+            });
+        }
+        
+        // ✅ Initialize all three login forms
+        document.addEventListener('DOMContentLoaded', () => {
+            setupLogin('adminLoginForm', 'adminError', 'admin', '/admin_dashboard');
+            setupLogin('teacherLoginForm', 'teacherError', 'teacher', '/teacher_dashboard');
+            setupLogin('studentLoginForm', 'studentError', 'student', '/student_dashboard');
+        });
+        
+        // ✅ Add shake animation keyframes dynamically
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
