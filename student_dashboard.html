@@ -6,109 +6,670 @@
     <title>Student Dashboard - Attendance Pro</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Login Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #81d7ef 0%, #764ba2 100%);
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* Alert Styles */
+        .alert-banner {
+            display: none;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-banner.critical {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        /* Enhanced Chatbot Styles */
+        .chat-widget {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+        }
+
+        .chat-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            transition: transform 0.2s;
+        }
+
+        .chat-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-box {
+            display: none;
+            flex-direction: column;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+
+        .msg {
+            margin-bottom: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            line-height: 1.4;
+        }
+
+        .msg-bot {
+            background: #e0e7ff;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 24px;
+            font-size: 0.95rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-input button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem 1rem;
+        }
+
+        .quick-reply {
+            padding: 0.5rem 1rem;
+            background: #e0e7ff;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .quick-reply:hover {
+            background: #c7d2fe;
+        }
+
+        /* Dashboard (hidden initially) */
+        #dashboard {
+            display: none;
+        }
+
+        /* Existing styles preserved */
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-safe { background: #d1fae5; color: #065f46; }
+        .status-warning { background: #fef3c7; color: #92400e; }
+        .status-critical { background: #fee2e2; color: #b91c1c; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .log-filters {
+            margin-bottom: 1rem;
+        }
+
+        .log-filters input {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="dashboard-nav">
-        <div class="nav-brand">Attendance Pro | Student</div>
-        <div class="nav-user">
-            <span id="userName">Student Name</span>
-            <button onclick="logout()" class="btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h2>🎓 Attendance Pro</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="rollNo">Roll Number</label>
+                    <input type="text" id="rollNo" placeholder="Enter your roll number" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <div id="loginError" class="error-msg">Invalid credentials. Please try again.</div>
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                Demo: Use any roll number & password to login
+            </p>
         </div>
-    </nav>
+    </div>
 
-    <main class="main-content">
-        <div class="stats-grid">
-            <div class="card stat-card">
-                <span class="stat-label">Overall Attendance</span>
-                <span class="stat-value" id="overallPerc">0.00%</span>
+    <!-- DASHBOARD (hidden until login) -->
+    <div id="dashboard">
+        <nav class="dashboard-nav">
+            <div class="nav-brand">Attendance Pro | Student</div>
+            <div class="nav-user">
+                <span id="userName">Student Name</span>
+                <button onclick="logout()" class="btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
             </div>
-            <div class="card stat-card">
-                <span class="stat-label">Status</span>
-                <div id="statusBadge" class="status-badge">N/A</div>
-            </div>
-        </div>
+        </nav>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <h2 class="section-title">Subject-wise Attendance</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Attended</th>
-                        <th>Total Classes</th>
-                        <th>Percentage</th>
-                    </tr>
-                </thead>
-                <tbody id="subjectTableBody"></tbody>
-            </table>
-        </div>
+        <main class="main-content">
+            <!-- Attendance Alert Banner -->
+            <div id="alertBanner" class="alert-banner"></div>
 
-        <div class="charts-container">
-            <div class="card">
-                <h2 class="section-title">Overall Ratio</h2>
-                <canvas id="pieChart"></canvas>
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <span class="stat-label">Overall Attendance</span>
+                    <span class="stat-value" id="overallPerc">0.00%</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Status</span>
+                    <div id="statusBadge" class="status-badge">N/A</div>
+                </div>
             </div>
-            <div class="card">
-                <h2 class="section-title">Subject Performance</h2>
-                <canvas id="barChart"></canvas>
-            </div>
-        </div>
 
-        <div class="card" style="margin-top: 2rem;">
-            <h2 class="section-title">Attendance Log</h2>
-            <div class="log-filters">
-                <input type="month" id="monthFilter" onchange="filterLog()">
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 class="section-title">Subject-wise Attendance</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Attended</th>
+                            <th>Total Classes</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectTableBody"></tbody>
+                </table>
             </div>
-            <table id="logTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Subject</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody"></tbody>
-            </table>
-        </div>
-    </main>
 
-    <!-- Chat Assistant -->
-    <div class="chat-widget">
-        <div class="chat-box" id="chatBox">
-            <div class="chat-header">Attendance Assistant</div>
-            <div class="chat-messages" id="chatMsgs">
-                <div class="msg msg-bot">Hi! I can help you check your attendance. Type "attendance" or "status".</div>
+            <div class="charts-container">
+                <div class="card">
+                    <h2 class="section-title">Overall Ratio</h2>
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <div class="card">
+                    <h2 class="section-title">Subject Performance</h2>
+                    <canvas id="barChart"></canvas>
+                </div>
             </div>
-            <div class="chat-input">
-                <input type="text" id="chatIn" placeholder="Type a message...">
-                <button onclick="sendChat()" class="btn" style="width: auto;">Send</button>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h2 class="section-title">Attendance Log</h2>
+                <div class="log-filters">
+                    <input type="month" id="monthFilter" onchange="filterLog()">
+                </div>
+                <table id="logTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
             </div>
+        </main>
+
+        <!-- Enhanced Dynamic Chatbot -->
+        <div class="chat-widget">
+            <div class="chat-box" id="chatBox">
+                <div class="chat-header">
+                    <span>🤖 Attendance Assistant</span>
+                    <button onclick="toggleChat()">×</button>
+                </div>
+                <div class="chat-messages" id="chatMsgs">
+                    <div class="msg msg-bot">Hi! 👋 I'm your Attendance Assistant. I can help you with:<br><br>
+                        • Check your overall attendance<br>
+                        • Subject-wise performance<br>
+                        • Attendance alerts & tips<br>
+                        • How to improve attendance<br><br>
+                        Try asking: "How am I doing?" or "Show my subjects"</div>
+                </div>
+                <!-- Quick Reply Buttons -->
+                <div class="quick-replies">
+                    <button class="quick-reply" onclick="quickAsk('attendance')">📊 Attendance</button>
+                    <button class="quick-reply" onclick="quickAsk('status')">⚠️ Status</button>
+                    <button class="quick-reply" onclick="quickAsk('tips')">💡 Tips</button>
+                    <button class="quick-reply" onclick="quickAsk('subjects')">📚 Subjects</button>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatIn" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendChat()">Send</button>
+                </div>
+            </div>
+            <button class="chat-btn" onclick="toggleChat()">💬</button>
         </div>
-        <div class="chat-btn" onclick="toggleChat()">💬</div>
     </div>
 
     <script src="/static/js/app.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if(!user || user.role !== 'student') window.location.href = '/';
-        document.getElementById('userName').textContent = user.name;
+        // ==================== AUTHENTICATION ====================
+        let currentUser = null;
+        let attendanceHistory = []; // For trend detection
 
+        function handleLogin(e) {
+            e.preventDefault();
+            const rollNo = document.getElementById('rollNo').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('loginError');
+
+            // In production: Replace with actual API call
+            // fetch('/api/login', { method: 'POST', body: JSON.stringify({rollNo, password}) })
+            
+            // Demo authentication (replace with backend validation)
+            if(rollNo && password) {
+                currentUser = {
+                    roll_no: rollNo,
+                    name: `Student ${rollNo}`,
+                    role: 'student'
+                };
+                
+                // Store in localStorage for session
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                // Hide login, show dashboard
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('userName').textContent = currentUser.name;
+                
+                // Load data
+                loadAttendance();
+                loadLogs();
+                
+                // Initialize chatbot context
+                initChatbotContext();
+            } else {
+                errorMsg.style.display = 'block';
+                setTimeout(() => errorMsg.style.display = 'none', 3000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            currentUser = null;
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('loginForm').reset();
+            
+            // Reset charts if needed
+            if(window.pieChartInstance) window.pieChartInstance.destroy();
+            if(window.barChartInstance) window.barChartInstance.destroy();
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('user');
+            if(savedUser) {
+                currentUser = JSON.parse(savedUser);
+                if(currentUser.role === 'student') {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('userName').textContent = currentUser.name;
+                    loadAttendance();
+                    loadLogs();
+                    initChatbotContext();
+                }
+            }
+        });
+
+        // ==================== ATTENDANCE LOGIC ====================
         let allLogs = [];
+        let previousAttendance = null; // For trend detection
 
         async function loadAttendance() {
-            const res = await fetch('/api/get_attendance', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({roll_no: user.roll_no})
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/get_attendance', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({roll_no: currentUser.roll_no})
+                });
+                const data = await res.json();
+                
+                const tbody = document.getElementById('subjectTableBody');
+                tbody.innerHTML = '';
+                let totalAtt = 0, totalClasses = 0;
+                const subjects = [], percs = [];
+
+                data.forEach(a => {
+                    const perc = (a.attended / a.total) * 100;
+                    totalAtt += a.attended;
+                    totalClasses += a.total;
+                    subjects.push(a.subject);
+                    percs.push(perc.toFixed(1));
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${a.subject}</td>
+                            <td>${a.attended}</td>
+                            <td>${a.total}</td>
+                            <td>${perc.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                });
+
+                const overall = totalClasses > 0 ? (totalAtt / totalClasses * 100) : 0;
+                document.getElementById('overallPerc').textContent = `${overall.toFixed(2)}%`;
+                
+                // Update status badge
+                const badge = document.getElementById('statusBadge');
+                if(overall >= 85) { 
+                    badge.textContent = '✅ Safe'; 
+                    badge.className = 'status-badge status-safe';
+                } else if(overall >= 75) {
+                    badge.textContent = '⚠️ Warning'; 
+                    badge.className = 'status-badge status-warning';
+                } else {
+                    badge.textContent = '🔴 Critical'; 
+                    badge.className = 'status-badge status-critical';
+                }
+
+                // 🔔 CHECK FOR DROPPING ATTENDANCE ALERT
+                checkAttendanceAlert(overall, previousAttendance);
+                previousAttendance = overall;
+                
+                // Store history for trend analysis
+                attendanceHistory.push({
+                    timestamp: new Date(),
+                    percentage: overall
+                });
+
+                initCharts(totalAtt, totalClasses - totalAtt, subjects, percs);
+                
+            } catch(err) {
+                console.error('Error loading attendance:', err);
+                // Demo fallback data
+                loadDemoAttendance();
+            }
+        }
+
+        // 🔔 Alert System: Detect continuous drop in 75-80% range
+        function checkAttendanceAlert(current, previous) {
+            const alertBanner = document.getElementById('alertBanner');
             
+            // Check if in danger zone (75-80%)
+            if(current >= 75 && current <= 80) {
+                // Check if it's dropping continuously
+                if(previous && current < previous) {
+                    alertBanner.className = 'alert-banner';
+                    alertBanner.innerHTML = `
+                        ⚠️ <strong>Attendance Alert!</strong> Your attendance is at ${current.toFixed(1)}% 
+                        and dropping. Aim for 85%+ to stay safe. 
+                        <button onclick="dismissAlert()" style="float:right; background:rgba(255,255,255,0.3); border:none; color:white; padding:0.25rem 0.75rem; border-radius:4px; cursor:pointer;">Dismiss</button>
+                    `;
+                    alertBanner.style.display = 'block';
+                    
+                    // Also notify via chatbot
+                    addBotMsg(`🔔 Heads up! Your attendance is at ${current.toFixed(1)}% and trending down. Consider attending upcoming classes to stay above 85%!`);
+                    
+                    // Optional: Browser notification (if permitted)
+                    if('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('Attendance Alert', {
+                            body: `Your attendance is dropping: ${current.toFixed(1)}%`,
+                            icon: '/static/icon-warning.png'
+                        });
+                    }
+                    return;
+                }
+            }
+            
+            // Critical zone alert
+            if(current < 75) {
+                alertBanner.className = 'alert-banner critical';
+                alertBanner.innerHTML = `
+                    🔴 <strong>Critical Alert!</strong> Your attendance is below 75% (${current.toFixed(1)}%). 
+                    Immediate action required to avoid academic consequences.
+                    <button onclick="dismissAlert()" style="float:right; background:rgba(255,255,255,0.3); border:none; color:white; padding:0.25rem 0.75rem; border-radius:4px; cursor:pointer;">Dismiss</button>
+                `;
+                alertBanner.style.display = 'block';
+                addBotMsg(`🚨 URGENT: Your attendance is at ${current.toFixed(1)}%! Please prioritize attending classes immediately.`);
+                return;
+            }
+            
+            // Hide alert if safe
+            alertBanner.style.display = 'none';
+        }
+
+        function dismissAlert() {
+            document.getElementById('alertBanner').style.display = 'none';
+        }
+
+        // Demo fallback for testing without backend
+        function loadDemoAttendance() {
+            const demoData = [
+                {subject: 'Mathematics', attended: 42, total: 50},
+                {subject: 'Physics', attended: 38, total: 50},
+                {subject: 'Computer Science', attended: 45, total: 50},
+                {subject: 'English', attended: 40, total: 50}
+            ];
+            // Process demo data same as API response
             const tbody = document.getElementById('subjectTableBody');
             tbody.innerHTML = '';
             let totalAtt = 0, totalClasses = 0;
             const subjects = [], percs = [];
 
-            data.forEach(a => {
+            demoData.forEach(a => {
                 const perc = (a.attended / a.total) * 100;
                 totalAtt += a.attended;
                 totalClasses += a.total;
@@ -125,28 +686,48 @@
                 `;
             });
 
-            const overall = totalClasses > 0 ? (totalAtt / totalClasses * 100) : 0;
+            const overall = (totalAtt / totalClasses * 100);
             document.getElementById('overallPerc').textContent = `${overall.toFixed(2)}%`;
             
             const badge = document.getElementById('statusBadge');
             if(overall >= 85) { 
-                badge.textContent = 'Safe'; badge.className = 'status-badge status-safe';
+                badge.textContent = '✅ Safe'; badge.className = 'status-badge status-safe';
             } else if(overall >= 75) {
-                badge.textContent = 'Warning'; badge.className = 'status-badge status-warning';
+                badge.textContent = '⚠️ Warning'; badge.className = 'status-badge status-warning';
             } else {
-                badge.textContent = 'Critical'; badge.className = 'status-badge status-critical';
+                badge.textContent = '🔴 Critical'; badge.className = 'status-badge status-critical';
             }
 
+            checkAttendanceAlert(overall, previousAttendance);
+            previousAttendance = overall;
+            
             initCharts(totalAtt, totalClasses - totalAtt, subjects, percs);
         }
 
         async function loadLogs() {
-            const res = await fetch('/api/get_attendance_log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({roll_no: user.roll_no})
-            });
-            allLogs = await res.json();
+            try {
+                const res = await fetch('/api/get_attendance_log', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({roll_no: currentUser.roll_no})
+                });
+                allLogs = await res.json();
+                filterLog();
+            } catch(err) {
+                console.error('Error loading logs:', err);
+                loadDemoLogs();
+            }
+        }
+
+        function loadDemoLogs() {
+            // Demo logs data
+            allLogs = [
+                {date: '2026-03-28', subject: 'Mathematics', present: true},
+                {date: '2026-03-27', subject: 'Physics', present: false},
+                {date: '2026-03-26', subject: 'Computer Science', present: true},
+                {date: '2026-03-25', subject: 'English', present: true},
+                {date: '2026-03-24', subject: 'Mathematics', present: false}
+            ];
             filterLog();
         }
 
@@ -161,76 +742,220 @@
                         <tr>
                             <td>${l.date}</td>
                             <td>${l.subject}</td>
-                            <td><span class="status-badge ${l.present ? 'status-safe' : 'status-critical'}">${l.present ? 'Present' : 'Absent'}</span></td>
+                            <td><span class="status-badge ${l.present ? 'status-safe' : 'status-critical'}">${l.present ? '✓ Present' : '✗ Absent'}</span></td>
                         </tr>
                     `;
                 }
             });
         }
 
+        // ==================== CHARTS ====================
+        let pieChartInstance = null;
+        let barChartInstance = null;
+
         function initCharts(present, absent, subjects, percs) {
-            new Chart(document.getElementById('pieChart'), {
-                type: 'pie',
+            // Destroy existing charts
+            if(pieChartInstance) pieChartInstance.destroy();
+            if(barChartInstance) barChartInstance.destroy();
+
+            // Pie Chart
+            pieChartInstance = new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
                 data: {
                     labels: ['Present', 'Absent'],
                     datasets: [{
                         data: [present, absent],
-                        backgroundColor: ['#10b981', '#ef4444']
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 0
                     }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
                 }
             });
 
-            new Chart(document.getElementById('barChart'), {
+            // Bar Chart
+            barChartInstance = new Chart(document.getElementById('barChart'), {
                 type: 'bar',
                 data: {
                     labels: subjects,
                     datasets: [{
                         label: 'Attendance %',
                         data: percs,
-                        backgroundColor: '#4f46e5'
+                        backgroundColor: subjects.map((_, i) => 
+                            `hsl(${220 + i * 30}, 70%, 60%)`
+                        ),
+                        borderRadius: 4
                     }]
                 },
                 options: {
-                    scales: { y: { beginAtZero: true, max: 100 } }
+                    responsive: true,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            title: { display: true, text: 'Percentage' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
                 }
             });
         }
 
-        loadAttendance();
-        loadLogs();
+        // ==================== ENHANCED CHATBOT ====================
+        let chatbotContext = {
+            userName: '',
+            overallAttendance: 0,
+            subjects: [],
+            lastQuery: null
+        };
 
-        // Chat logic
+        function initChatbotContext() {
+            chatbotContext.userName = currentUser?.name || 'Student';
+            // Will be updated when attendance loads
+        }
+
         function toggleChat() {
             const box = document.getElementById('chatBox');
             box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+            if(box.style.display === 'flex') {
+                document.getElementById('chatIn').focus();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if(e.key === 'Enter') sendChat();
+        }
+
+        function quickAsk(type) {
+            const queries = {
+                'attendance': 'What is my overall attendance?',
+                'status': 'What is my current attendance status?',
+                'tips': 'Give me tips to improve my attendance',
+                'subjects': 'Show my subject-wise attendance'
+            };
+            document.getElementById('chatIn').value = queries[type];
+            sendChat();
         }
 
         function sendChat() {
             const input = document.getElementById('chatIn');
-            const msg = input.value.toLowerCase();
+            const msg = input.value.trim();
             if(!msg) return;
 
-            addMsg(input.value, 'user');
+            addMsg(msg, 'user');
             input.value = '';
 
-            setTimeout(() => {
-                if(msg.includes('attendance')) {
-                    addMsg(`Your overall attendance is ${document.getElementById('overallPerc').textContent}.`, 'bot');
-                } else if(msg.includes('status')) {
-                    addMsg(`Your status is currently: ${document.getElementById('statusBadge').textContent}.`, 'bot');
+            // Update context with latest data
+            chatbotContext.overallAttendance = parseFloat(document.getElementById('overallPerc').textContent) || 0;
+            chatbotContext.status = document.getElementById('statusBadge').textContent;
+
+            // Process with delay for natural feel
+            setTimeout(() => processChatQuery(msg.toLowerCase()), 400);
+        }
+
+        function processChatQuery(query) {
+            // 🤖 Smart Intent Recognition
+            if(query.match(/(attendance|percentage|how am i doing)/)) {
+                addBotMsg(`📊 Your overall attendance is <strong>${chatbotContext.overallAttendance.toFixed(1)}%</strong>.`);
+                
+                if(chatbotContext.overallAttendance < 75) {
+                    addBotMsg(`⚠️ You're below the 75% minimum requirement. Attend at least <strong>${calculateNeededClasses()}</strong> more classes to reach 85%!`);
+                } else if(chatbotContext.overallAttendance < 85) {
+                    addBotMsg(`💡 You're close! Attend the next few classes consistently to reach the safe zone (85%+).`);
                 } else {
-                    addMsg("I can only answer about 'attendance' and 'status'.", 'bot');
+                    addBotMsg(`🎉 Great job! Keep up the consistent attendance!`);
                 }
-            }, 500);
+                
+            } else if(query.match(/(status|warning|alert|danger)/)) {
+                const status = chatbotContext.status;
+                addBotMsg(`📋 Your current status: <strong>${status}</strong>`);
+                
+                if(status.includes('Warning') || status.includes('Critical')) {
+                    addBotMsg(`🔍 <em>Tip:</em> Check your subject-wise breakdown below to identify which classes need attention.`);
+                }
+                
+            } else if(query.match(/(subject|subjects|breakdown|which class)/)) {
+                const tableBody = document.getElementById('subjectTableBody');
+                if(tableBody.rows.length > 0) {
+                    let summary = '📚 <strong>Subject-wise Attendance:</strong><br><br>';
+                    Array.from(tableBody.rows).forEach(row => {
+                        const cells = row.cells;
+                        summary += `• ${cells[0].textContent}: <strong>${cells[3].textContent}</strong><br>`;
+                    });
+                    addBotMsg(summary);
+                } else {
+                    addBotMsg('Loading your subjects... Please wait a moment.');
+                }
+                
+            } else if(query.match(/(tips|improve|help|advice)/)) {
+                addBotMsg(`💡 <strong>Attendance Improvement Tips:</strong><br><br>
+                    1️⃣ Set daily reminders for classes<br>
+                    2️⃣ Mark your calendar for upcoming sessions<br>
+                    3️⃣ Connect with classmates for notes if absent<br>
+                    4️⃣ Prioritize classes with lower attendance %<br>
+                    5️⃣ Reach out to faculty if facing issues<br><br>
+                    <em>Consistency is key! 🎯</em>`);
+                    
+            } else if(query.match(/(log|history|recent|past)/)) {
+                addBotMsg(`📅 Your recent attendance log is displayed in the table below. Use the month filter to view specific periods.`);
+                
+            } else if(query.match(/(hello|hi|hey|help)/)) {
+                addBotMsg(`👋 Hello ${chatbotContext.userName}! I'm here to help with your attendance. Try asking:<br><br>
+                    • "What's my attendance?"<br>
+                    • "Show my subjects"<br>
+                    • "How can I improve?"<br>
+                    • "What's my status?"`);
+                    
+            } else if(query.match(/(thank|thanks|bye)/)) {
+                addBotMsg(`😊 You're welcome! Stay consistent with your attendance. Type "help" anytime for assistance!`);
+                
+            } else {
+                addBotMsg(`🤔 I'm not sure about that. Try asking about:<br><br>
+                    • Your attendance percentage<br>
+                    • Subject-wise breakdown<br>
+                    • Tips to improve<br>
+                    • Current status alert<br><br>
+                    Or click one of the quick buttons below! 👇`);
+            }
+        }
+
+        function calculateNeededClasses() {
+            // Simple calculation: assuming 50 total classes per subject avg
+            const current = chatbotContext.overallAttendance;
+            const target = 85;
+            if(current >= target) return '0';
+            // Simplified formula
+            const needed = Math.ceil(((target * 50) - (current * 50)) / (100 - target));
+            return `${Math.max(1, needed)}-${Math.max(2, needed+2)}`;
         }
 
         function addMsg(text, type) {
             const div = document.createElement('div');
             div.className = `msg msg-${type}`;
-            div.textContent = text;
-            document.getElementById('chatMsgs').appendChild(div);
-            div.scrollIntoView();
+            div.innerHTML = text; // Allow HTML for formatting
+            const container = document.getElementById('chatMsgs');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
+
+        function addBotMsg(text) {
+            addMsg(text, 'bot');
+        }
+
+        // Request notification permission for alerts
+        if('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Initialize
+        loadAttendance();
+        loadLogs();
     </script>
 </body>
 </html>
